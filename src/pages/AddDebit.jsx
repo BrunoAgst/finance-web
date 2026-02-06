@@ -48,6 +48,7 @@ function AddDebit() {
               onChange={(event) => setAmount(event.target.value)}
               type="number"
               placeholder="Valor"
+              min={0.1}
               required
             />
             <Input
