@@ -63,9 +63,8 @@ src/
 
 ## 🛣️ Rotas
 
-- `/` - Página inicial (App)
+- `/` - Página inicial (Dashboard principal com formulário e lista de débitos)
 - `/login` - Tela de autenticação
-- `/home` - Dashboard principal com formulário e lista de débitos
 - `/edit-debit` - Tela de edição de débitos
 
 ## 🎨 Design System

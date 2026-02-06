@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Input from "../components/Input";
 import Select from "../components/Select";
@@ -10,23 +10,12 @@ function EditDebit() {
   const navigate = useNavigate();
   const debit = location.state?.debit;
 
-  const [name, setName] = useState("");
-  const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("");
-  const [date, setDate] = useState("");
-  const [fixed, setFixed] = useState("");
-  const [installment, setInstallment] = useState("");
-
-  useEffect(() => {
-    if (debit) {
-      setName(debit.name || "");
-      setAmount(debit.amount || "");
-      setCategory(debit.category || "");
-      setDate(debit.date || "");
-      setFixed(debit.fixed || "");
-      setInstallment(debit.installment || "");
-    }
-  }, [debit]);
+  const [name, setName] = useState(debit?.name || "");
+  const [amount, setAmount] = useState(debit?.amount || "");
+  const [category, setCategory] = useState(debit?.category || "");
+  const [date, setDate] = useState(debit?.date || "");
+  const [fixed, setFixed] = useState(debit?.fixed || "");
+  const [installment, setInstallment] = useState(debit?.installment || "");
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -44,11 +33,11 @@ function EditDebit() {
     console.log("Dados atualizados:", updatedData);
 
     // Aqui você pode adicionar a lógica para atualizar o debit
-    navigate("/home");
+    navigate("/");
   };
 
   const handleCancel = () => {
-    navigate("/home");
+    navigate("//");
   };
 
   if (!debit) {
@@ -57,7 +46,7 @@ function EditDebit() {
         <UserHeader />
         <div className="text-center">
           <p className="text-gray-600 mb-4">Nenhum débito selecionado</p>
-          <Button onClick={() => navigate("/home")}>Voltar</Button>
+          <Button onClick={() => navigate("/")}>Voltar</Button>
         </div>
       </div>
     );
