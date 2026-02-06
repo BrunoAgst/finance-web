@@ -28,13 +28,18 @@ function ViewDebit() {
     return debit;
   }
 
+  function onDebitClick(debit) {
+    navigate("/details", { state: { debit } });
+  }
+
   return (
     <div className="w-full max-w-md">
       <ul className="flex flex-col gap-3">
         {debits.map((debit) => (
           <li
             key={debit.id}
-            className="flex items-center justify-between bg-white p-4 rounded-lg shadow-sm"
+            onClick={() => onDebitClick(debit)}
+            className="flex items-center justify-between bg-white p-4 rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
           >
             <div className="flex flex-col gap-1">
               <p className="font-semibold">{debit.name}</p>
@@ -44,10 +49,20 @@ function ViewDebit() {
               <p className="text-xs text-gray-500">{debit.category}</p>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => onEditDebitClick(debit)}>
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditDebitClick(debit);
+                }}
+              >
                 <PencilIcon size={16} />
               </Button>
-              <Button onClick={() => onDeleteDebitClick(debit)}>
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteDebitClick(debit);
+                }}
+              >
                 <TrashIcon size={16} />
               </Button>
             </div>

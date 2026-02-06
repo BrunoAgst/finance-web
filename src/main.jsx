@@ -4,15 +4,13 @@ import App from "./App.jsx";
 import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import EditDebit from "./pages/EditDebit.jsx";
+import DebitDetails from "./pages/DebitDetails.jsx";
+import MonthlyPurchases from "./pages/MonthlyPurchases.jsx";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
-  },
-  {
-    path: "/home",
     element: <Home />,
   },
   {
@@ -22,6 +20,14 @@ const router = createBrowserRouter([
   {
     path: "/edit",
     element: <EditDebit />,
+  },
+  {
+    path: "/details",
+    element: <DebitDetails />,
+  },
+  {
+    path: "/monthly",
+    element: <MonthlyPurchases />,
   },
 ]);
 
