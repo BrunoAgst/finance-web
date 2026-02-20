@@ -1,47 +1,46 @@
-import { useState } from "react";
-import Input from "../components/Input";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 import Button from "../components/Button";
 import logo from "../assets/logo.png";
 
 function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { isAuthenticated, login, isLoading } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  useEffect(() => {
+    // Se já estiver autenticado, redireciona para a página inicial
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated, navigate]);
 
-    const loginData = {
-      email,
-      password,
-    };
-
-    console.log("Dados de login:", loginData);
-
-    // Aqui você pode adicionar a lógica de autenticação
+  const handleLogin = () => {
+    login();
   };
+
+  if (isLoading) {
+    return (
+      <div className="w-screen h-screen bg-slate-50 flex flex-col justify-center items-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-screen h-screen bg-slate-50 flex flex-col justify-center items-center p-6">
       <div className="w-full max-w-md flex flex-col items-center gap-6">
         <img src={logo} alt="Logo" className="w-32 h-32" />
 
-        <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit}>
-          <Input
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            type="email"
-            placeholder="Email"
-            required
-          />
-          <Input
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            type="password"
-            placeholder="Senha"
-            required
-          />
-          <Button type="submit">Entrar</Button>
-        </form>
+        <div className="flex flex-col gap-4 w-full">
+          <p className="text-center text-gray-700 mb-2">
+            Faça login
+          </p>
+          <Button onClick={handleLogin}>Entrar</Button>
+        </div>
       </div>
     </div>
   );

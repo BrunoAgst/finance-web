@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import {
   PieChart,
   Pie,
@@ -11,79 +11,111 @@ import {
 } from "recharts";
 import Button from "../components/Button";
 import UserHeader from "../components/UserHeader";
+import { useAuth } from "../hooks/useAuth";
+import { getDebtsByMonth, translateCategory } from "../services/api";
 
 function MonthlyPurchases() {
   const navigate = useNavigate();
+  const { getToken } = useAuth();
+  const [purchases, setPurchases] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Dados de exemplo (remover quando implementar API)
-  // eslint-disable-next-line no-unused-vars
-  const [purchases, setPurchases] = useState([
-    {
-      id: "1",
-      name: "Shoppe",
-      amount: 130.0,
-      category: "CREDIT",
-      date: "2026-02-05",
-    },
-    {
-      id: "2",
-      name: "Ali",
-      amount: 50.0,
-      category: "PIX",
-      date: "2026-02-03",
-    },
-    {
-      id: "3",
-      name: "Mercado",
-      amount: 250.0,
-      category: "DEBIT",
-      date: "2026-02-01",
-    },
-  ]);
-
-  // Obter o mês atual
   const now = new Date();
-  const currentMonth = now.toLocaleDateString("pt-BR", {
-    month: "long",
-    year: "numeric",
-  });
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1); // +1 porque getMonth() retorna 0-11
+  const [selectedYear] = useState(now.getFullYear());
+
+  const getMonthName = (monthNumber) => {
+    const date = new Date(selectedYear, monthNumber - 1, 1);
+    return date.toLocaleDateString("pt-BR", {
+      month: "long",
+      year: "numeric",
+    });
+  };
 
   useEffect(() => {
-    // TODO: Implementar chamada para API
-    // Exemplo:
-    // fetch('/api/purchases/monthly')
-    //   .then(res => res.json())
-    //   .then(data => setPurchases(data))
-    //   .catch(err => console.error(err));
-  }, []);
+    const fetchMonthlyPurchases = async () => {
+      try {
+        setLoading(true);
+        const token = getToken();
+
+        if (!token) {
+          console.error("Token não disponível");
+          setLoading(false);
+          return;
+        }
+
+        const data = await getDebtsByMonth(token, selectedMonth);
+        setPurchases(data);
+      } catch (error) {
+        console.error("Erro ao buscar compras do mês:", error);
+        setPurchases([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMonthlyPurchases();
+  }, [getToken, selectedMonth]);
+
+  const handlePreviousMonth = () => {
+    setSelectedMonth((prev) => (prev === 1 ? 12 : prev - 1));
+  };
+
+  const handleNextMonth = () => {
+    setSelectedMonth((prev) => (prev === 12 ? 1 : prev + 1));
+  };
 
   const handlePurchaseClick = (purchase) => {
     navigate("/details", { state: { debit: purchase } });
   };
 
-  const totalAmount = purchases.reduce(
-    (sum, purchase) => sum + purchase.amount,
-    0,
-  );
+  // Calcular valor total considerando parcelas
+  const totalAmount = purchases.reduce((sum, purchase) => {
+    if (
+      purchase.category.includes("INSTALLMENT") &&
+      purchase.installmentAmount
+    ) {
+      return sum + purchase.installmentAmount;
+    }
+    return sum + purchase.amount;
+  }, 0);
 
   // Agrupar compras por categoria para o gráfico
   const categoryData = purchases.reduce((acc, purchase) => {
-    const existing = acc.find((item) => item.name === purchase.category);
+    const categoryName = translateCategory(purchase.category);
+    const value =
+      purchase.category.includes("INSTALLMENT") && purchase.installmentAmount
+        ? purchase.installmentAmount
+        : purchase.amount;
+
+    const existing = acc.find((item) => item.name === categoryName);
     if (existing) {
-      existing.value += purchase.amount;
+      existing.value += value;
     } else {
-      acc.push({ name: purchase.category, value: purchase.amount });
+      acc.push({ name: categoryName, value: value });
     }
     return acc;
   }, []);
 
   // Cores para o gráfico de pizza
   const COLORS = {
-    CREDIT: "#3b82f6",
-    DEBIT: "#10b981",
+    Crédito: "#3b82f6",
+    Débito: "#10b981",
     PIX: "#8b5cf6",
-    INSTALLMENT_CREDIT: "#f59e0b",
+    Parcelado: "#f59e0b",
+    "Débito Parcelado": "#ef4444",
   };
+
+  if (loading) {
+    return (
+      <div className="w-screen min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
+        <div className="flex items-center gap-2">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-screen min-h-screen bg-slate-50 flex flex-col items-center p-6 relative">
@@ -100,7 +132,30 @@ function MonthlyPurchases() {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Gastos do Mês
           </h1>
-          <p className="text-gray-600 capitalize">{currentMonth}</p>
+
+          {/* Navegação de mês */}
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={handlePreviousMonth}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Mês anterior"
+            >
+              <ChevronLeftIcon size={24} className="text-gray-600" />
+            </button>
+
+            <p className="text-lg font-medium text-gray-700 capitalize">
+              {getMonthName(selectedMonth)}
+            </p>
+
+            <button
+              onClick={handleNextMonth}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Próximo mês"
+            >
+              <ChevronRightIcon size={24} className="text-gray-600" />
+            </button>
+          </div>
+
           <div className="mt-4 pt-4 border-t border-gray-200">
             <p className="text-sm text-gray-600">Total:</p>
             <p className="text-2xl font-bold text-gray-900">
@@ -165,9 +220,9 @@ function MonthlyPurchases() {
               Lista de Gastos
             </h2>
             <ul className="flex flex-col gap-3">
-              {purchases.map((purchase) => (
+              {purchases.map((purchase, index) => (
                 <li
-                  key={purchase.id}
+                  key={`${purchase.name}-${purchase.date}-${index}`}
                   onClick={() => handlePurchaseClick(purchase)}
                   className="flex items-center justify-between p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm cursor-pointer transition-all"
                 >
@@ -178,11 +233,21 @@ function MonthlyPurchases() {
                     <p className="text-sm text-gray-600">
                       {new Date(purchase.date).toLocaleDateString("pt-BR")}
                     </p>
-                    <p className="text-xs text-gray-500">{purchase.category}</p>
+                    <div className="flex gap-2 text-xs text-gray-500">
+                      <span>{translateCategory(purchase.category)}</span>
+                      {purchase.installmentNumber && (
+                        <span>{purchase.installmentNumber}</span>
+                      )}
+                    </div>
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-semibold text-gray-900">
-                      R$ {purchase.amount.toFixed(2)}
+                      R${" "}
+                      {(purchase.category.includes("INSTALLMENT") &&
+                      purchase.installmentAmount
+                        ? purchase.installmentAmount
+                        : purchase.amount
+                      ).toFixed(2)}
                     </p>
                   </div>
                 </li>

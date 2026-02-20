@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 import UserHeader from "../components/UserHeader";
 import { ArrowLeftIcon } from "lucide-react";
+import { formatDate, translateCategory } from "../services/api";
 
 function DebitDetails() {
   const location = useLocation();
@@ -51,7 +52,9 @@ function DebitDetails() {
               <label className="text-sm font-medium text-gray-600">
                 Categoria
               </label>
-              <p className="text-lg text-gray-900 mt-1">{debit.category}</p>
+              <p className="text-lg text-gray-900 mt-1">
+                {translateCategory(debit.category)}
+              </p>
             </div>
 
             {debit.date && (
@@ -59,31 +62,35 @@ function DebitDetails() {
                 <label className="text-sm font-medium text-gray-600">
                   Data
                 </label>
-                <p className="text-lg text-gray-900 mt-1">{debit.date}</p>
-              </div>
-            )}
-
-            {debit.installment && (
-              <div>
-                <label className="text-sm font-medium text-gray-600">
-                  Parcelas
-                </label>
                 <p className="text-lg text-gray-900 mt-1">
-                  {debit.installment}
+                  {formatDate(debit.date)}
                 </p>
               </div>
             )}
 
-            {debit.fixed !== undefined && (
-              <div>
-                <label className="text-sm font-medium text-gray-600">
-                  Fixo
-                </label>
-                <p className="text-lg text-gray-900 mt-1">
-                  {debit.fixed ? "Sim" : "Não"}
-                </p>
-              </div>
-            )}
+            {debit.category?.includes("INSTALLMENT") &&
+              debit.installmentNumber && (
+                <div>
+                  <label className="text-sm font-medium text-gray-600">
+                    Parcelas
+                  </label>
+                  <p className="text-lg text-gray-900 mt-1">
+                    {debit.installmentNumber}x
+                  </p>
+                </div>
+              )}
+
+            {debit.fixed !== undefined &&
+              !debit.category?.includes("INSTALLMENT") && (
+                <div>
+                  <label className="text-sm font-medium text-gray-600">
+                    Fixo
+                  </label>
+                  <p className="text-lg text-gray-900 mt-1">
+                    {debit.fixed ? "Sim" : "Não"}
+                  </p>
+                </div>
+              )}
           </div>
         </div>
       </div>
