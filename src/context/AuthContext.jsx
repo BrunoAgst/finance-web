@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }) => {
     keycloak
       .init({
         onLoad: "check-sso",
+        redirectUri: (import.meta.env.VITE_APP_URL || window.location.origin) + "/",
         silentCheckSsoRedirectUri:
           (import.meta.env.VITE_APP_URL || window.location.origin) + "/silent-check-sso.html",
         checkLoginIframe: false,
