@@ -13,9 +13,7 @@ export const getDebts = async (token) => {
     if (!response.ok) {
       throw new Error(`Erro ao buscar transações: ${response.status}`);
     }
-    let r = await response.json();
-    console.log(r);
-    return await r;
+    return await response.json();
   } catch (error) {
     console.error("Erro ao buscar transações:", error);
     throw error;
