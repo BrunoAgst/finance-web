@@ -9,7 +9,6 @@ function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Se já estiver autenticado, redireciona para a página inicial
     if (isAuthenticated) {
       navigate("/");
     }
@@ -33,13 +32,14 @@ function Login() {
   return (
     <div className="w-screen h-screen bg-slate-50 flex flex-col justify-center items-center p-6">
       <div className="w-full max-w-md flex flex-col items-center gap-6">
-        <img src={logo} alt="Logo" className="w-32 h-32" />
+        <img src={logo} alt="Duocash" className="w-32 h-32" />
+        <h1 className="text-2xl font-bold text-gray-900">Duocash</h1>
 
         <div className="flex flex-col gap-4 w-full">
-          <p className="text-center text-gray-700 mb-2">
-            Faça login
+          <p className="text-center text-gray-500 mb-2">
+            Finanças a dois, simplificadas
           </p>
-          <Button onClick={handleLogin}>Entrar</Button>
+          <Button onClick={handleLogin}>Acessar minha conta</Button>
         </div>
       </div>
     </div>

@@ -61,7 +61,8 @@ function Home() {
     <div className="w-screen h-screen bg-slate-50 flex flex-col items-center p-6 relative overflow-y-auto">
       <UserHeader />
       <div className="flex flex-col gap-10 items-center py-10 w-full">
-        <img src={logo} alt="Logo" className="w-32 h-32 mb-2" />
+        <img src={logo} alt="Duocash" className="w-32 h-32" />
+        <h1 className="text-2xl font-bold text-gray-900 -mt-4 mb-2">Duocash</h1>
 
         <div className="bg-white rounded-lg shadow-md p-6 w-full max-w-md">
           <h2 className="text-gray-600 text-sm font-medium mb-2">
