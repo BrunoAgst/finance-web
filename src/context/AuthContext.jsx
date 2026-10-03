@@ -94,9 +94,9 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
-  const getToken = () => {
+  const getToken = useCallback(() => {
     return keycloak.token;
-  };
+  }, []);
 
   const value = {
     isAuthenticated,

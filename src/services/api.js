@@ -1,19 +1,52 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const REQUEST_TIMEOUT_MS = 15000;
+
+const requestApi = async (path, token, method = "GET", body) => {
+  if (!API_BASE_URL?.trim()) {
+    throw new Error("URL da API não configurada (VITE_API_BASE_URL).");
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL.trim().replace(/\/+$/, "")}${path}`,
+      {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        signal: controller.signal,
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      },
+    );
+
+    if (!response.ok) {
+      const details = body === undefined ? "" : await response.text();
+      throw new Error(`HTTP ${response.status}${details ? ` - ${details}` : ""}`);
+    }
+
+    return method === "DELETE" ? true : await response.json();
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error(
+        method === "GET"
+          ? "A API não respondeu em 15 segundos. Verifique sua conexão e tente novamente."
+          : "A API não respondeu em 15 segundos. Não foi possível confirmar a operação. Atualize a página antes de tentar novamente.",
+        { cause: error },
+      );
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+};
 
 export const getDebts = async (token) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/v1/debts`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Erro ao buscar transações: ${response.status}`);
-    }
-    return await response.json();
+    return await requestApi("/v1/debts", token);
   } catch (error) {
     console.error("Erro ao buscar transações:", error);
     throw error;
@@ -26,22 +59,7 @@ export const getDebtsByMonth = async (
   year = new Date().getFullYear(),
 ) => {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/v1/debts/month/${month}?year=${year}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`Erro ao buscar transações do mês: ${response.status}`);
-    }
-
-    return await response.json();
+    return await requestApi(`/v1/debts/month/${month}?year=${year}`, token);
   } catch (error) {
     console.error("Erro ao buscar transações do mês:", error);
     throw error;
@@ -69,24 +87,7 @@ export const translateCategory = (category) => {
 
 export const createDebt = async (token, debtData) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/v1/debts`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(debtData),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Erro da API:", response.status, errorText);
-      throw new Error(
-        `Erro ao criar transação: ${response.status} - ${errorText}`,
-      );
-    }
-
-    return await response.json();
+    return await requestApi("/v1/debts", token, "POST", debtData);
   } catch (error) {
     console.error("Erro ao criar transação:", error);
     throw error;
@@ -95,19 +96,7 @@ export const createDebt = async (token, debtData) => {
 
 export const deleteDebt = async (token, id) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/v1/debts/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Erro ao deletar transação: ${response.status}`);
-    }
-
-    return true;
+    return await requestApi(`/v1/debts/${id}`, token, "DELETE");
   } catch (error) {
     console.error("Erro ao deletar transação:", error);
     throw error;
@@ -116,24 +105,7 @@ export const deleteDebt = async (token, id) => {
 
 export const updateDebt = async (token, id, debtData) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/v1/debts/${id}`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(debtData),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Erro da API:", response.status, errorText);
-      throw new Error(
-        `Erro ao atualizar transação: ${response.status} - ${errorText}`,
-      );
-    }
-
-    return await response.json();
+    return await requestApi(`/v1/debts/${id}`, token, "PATCH", debtData);
   } catch (error) {
     console.error("Erro ao atualizar transação:", error);
     throw error;
