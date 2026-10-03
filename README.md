@@ -55,6 +55,7 @@ Finance App é uma aplicação completa de controle financeiro que permite aos u
   - Total gasto no mês atual
   - Últimas 10 transações
   - Acesso rápido ao formulário
+  - Erro visível e opção de tentar novamente se a API falhar
 - **Gastos do Mês** (`/monthly`)
   - Navegação entre meses e anos (← →), incluindo a virada dezembro/janeiro
   - Gráfico de pizza por categoria
@@ -144,13 +145,20 @@ Publique primeiro o backend com suporte a `year` e depois o frontend.
 ### Testes
 
 Execute `npm test` para validar a navegação mensal, incluindo a virada de ano,
-e o envio do ano nas requisições à API.
+o envio do ano nas requisições à API e o tratamento de falhas e timeouts.
+
+As chamadas à API têm limite de 15 segundos, incluindo a leitura da resposta.
+Em timeouts de cadastro, edição ou exclusão, atualize a página para conferir se
+a operação foi aplicada antes de repeti-la.
+Se o painel exibir timeout e não houver requisições no backend, confira a URL
+na aba Network do navegador, a conectividade e eventuais bloqueios de CORS ou
+conteúdo misto (frontend HTTPS chamando API HTTP).
 
 ## ⚙️ Variáveis de Ambiente
 
 ```env
 # API Configuration
-VITE_API_BASE_URL=http://localhost:8080/v1
+VITE_API_BASE_URL=http://localhost:8080
 
 # App Configuration
 VITE_APP_URL=http://localhost:3000
@@ -160,6 +168,11 @@ VITE_KEYCLOAK_URL=http://localhost:8085
 VITE_KEYCLOAK_REALM=finance-api-dev
 VITE_KEYCLOAK_CLIENT_ID=user-management-service
 ```
+
+`VITE_API_BASE_URL` deve apontar para a base da API, sem o sufixo `/v1`, que já
+é incluído nas chamadas. As variáveis `VITE_*` são incorporadas durante o build:
+alterá-las no ambiente de um container já construído não atualiza o frontend.
+Após mudar a URL, gere e publique uma nova imagem.
 
 ## 🔧 Como Executar
 

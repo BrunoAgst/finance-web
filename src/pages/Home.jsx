@@ -14,31 +14,25 @@ function Home() {
   const [monthlyTotal, setMonthlyTotal] = useState(0);
   const [debts, setDebts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchDebts = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const token = getToken();
 
       if (!token) {
-        console.error("Token não disponível");
-        setLoading(false);
-        return;
+        throw new Error("Token não disponível. Acesse sua conta novamente.");
       }
 
-      // Buscar últimas transações (últimos 30 dias)
-      const data = await getDebts(token);
-      setDebts(data);
-
-      // Buscar total do mês atual usando a rota específica
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth() + 1; // 1-12
 
-      const monthlyData = await getDebtsByMonth(
-        token,
-        currentMonth,
-        currentDate.getFullYear(),
-      );
+      const [data, monthlyData] = await Promise.all([
+        getDebts(token),
+        getDebtsByMonth(token, currentMonth, currentDate.getFullYear()),
+      ]);
 
       // Calcular total considerando parcelas
       const monthlyExpenses = monthlyData.reduce((total, debt) => {
@@ -49,9 +43,11 @@ function Home() {
         return total + debt.amount;
       }, 0);
 
+      setDebts(data);
       setMonthlyTotal(monthlyExpenses);
     } catch (error) {
       console.error("Erro ao buscar transações:", error);
+      setError(error.message || "Não foi possível carregar as transações.");
     } finally {
       setLoading(false);
     }
@@ -77,6 +73,13 @@ function Home() {
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
               <p className="text-gray-500">Carregando...</p>
             </div>
+          ) : error ? (
+            <div role="alert">
+              <p className="text-red-600">{error}</p>
+              <Button onClick={fetchDebts} className="w-full mt-4">
+                Tentar novamente
+              </Button>
+            </div>
           ) : (
             <>
               <p className="text-3xl font-bold text-gray-900">
@@ -97,7 +100,9 @@ function Home() {
         </div>
 
         <AddDebit onDebtCreated={fetchDebts} />
-        <ViewDebit debts={debts} loading={loading} onDebtDeleted={fetchDebts} />
+        {!error && (
+          <ViewDebit debts={debts} loading={loading} onDebtDeleted={fetchDebts} />
+        )}
       </div>
     </div>
   );
