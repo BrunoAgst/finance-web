@@ -296,6 +296,27 @@ Configure no Keycloak Admin:
 
 Use `--build-arg` para passar variáveis no build
 
+### Timeout em `/v1/debts` via Cloudflare Tunnel
+
+O túnel encaminha as chamadas ao frontend, e o Nginx do frontend encaminha
+`/v1/` à API em `http://192.168.4.63:8081/v1/`, conforme `nginx.conf`.
+O container do frontend precisa conseguir acessar esse destino.
+
+Para verificar a conectividade, execute no terminal do container:
+
+```bash
+wget -S -O /dev/null -T 10 http://192.168.4.63:8081/v1/debts
+```
+
+Uma resposta HTTP 401/403 sem token confirma conectividade; timeout indica
+problema de endereço, rota ou firewall. Não desabilite a autenticação.
+O erro `Incoming request ended abruptly: context canceled` do Cloudflare
+pode ocorrer quando o navegador cancela uma chamada por timeout.
+
+Após alterar `nginx.conf`, reconstrua a imagem e recrie o container do frontend.
+Valide a configuração com `nginx -t` dentro do container e confira uma chamada
+autenticada pelo navegador, além dos logs da API.
+
 ## 👨‍💻 Desenvolvimento
 
 ### Scripts Disponíveis
