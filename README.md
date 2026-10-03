@@ -56,7 +56,7 @@ Finance App é uma aplicação completa de controle financeiro que permite aos u
   - Últimas 10 transações
   - Acesso rápido ao formulário
 - **Gastos do Mês** (`/monthly`)
-  - Navegação entre meses (← →)
+  - Navegação entre meses e anos (← →), incluindo a virada dezembro/janeiro
   - Gráfico de pizza por categoria
   - Lista completa de gastos do mês
   - Total mensal calculado considerando parcelas
@@ -132,10 +132,19 @@ finance-app/
 | Método   | Endpoint                 | Descrição                     |
 | -------- | ------------------------ | ----------------------------- |
 | `GET`    | `/v1/debts`              | Últimas transações (30 dias)  |
-| `GET`    | `/v1/debts/month/{1-12}` | Transações por mês específico |
+| `GET`    | `/v1/debts/month/{1-12}?year=2027` | Transações por mês e ano específicos |
 | `POST`   | `/v1/debts`              | Criar nova transação          |
 | `PATCH`  | `/v1/debts/{id}`         | Atualizar transação           |
 | `DELETE` | `/v1/debts/{id}`         | Deletar transação             |
+
+O parâmetro `year` da consulta mensal é opcional na API; quando omitido, o
+backend utiliza o ano atual. O frontend envia o ano selecionado explicitamente.
+Publique primeiro o backend com suporte a `year` e depois o frontend.
+
+### Testes
+
+Execute `npm test` para validar a navegação mensal, incluindo a virada de ano,
+e o envio do ano nas requisições à API.
 
 ## ⚙️ Variáveis de Ambiente
 

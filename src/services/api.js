@@ -20,15 +20,22 @@ export const getDebts = async (token) => {
   }
 };
 
-export const getDebtsByMonth = async (token, month) => {
+export const getDebtsByMonth = async (
+  token,
+  month,
+  year = new Date().getFullYear(),
+) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/v1/debts/month/${month}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${API_BASE_URL}/v1/debts/month/${month}?year=${year}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
 
     if (!response.ok) {
       throw new Error(`Erro ao buscar transações do mês: ${response.status}`);

@@ -34,7 +34,11 @@ function Home() {
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth() + 1; // 1-12
 
-      const monthlyData = await getDebtsByMonth(token, currentMonth);
+      const monthlyData = await getDebtsByMonth(
+        token,
+        currentMonth,
+        currentDate.getFullYear(),
+      );
 
       // Calcular total considerando parcelas
       const monthlyExpenses = monthlyData.reduce((total, debt) => {

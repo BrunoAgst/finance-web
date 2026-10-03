@@ -13,16 +13,21 @@ import Button from "../components/Button";
 import UserHeader from "../components/UserHeader";
 import { useAuth } from "../hooks/useAuth";
 import { getDebtsByMonth, translateCategory } from "../services/api";
+import { shiftMonth } from "../utils/month";
 
 function MonthlyPurchases() {
   const navigate = useNavigate();
   const { getToken } = useAuth();
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const now = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1); // +1 porque getMonth() retorna 0-11
-  const [selectedYear] = useState(now.getFullYear());
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+  const selectedMonth = selectedDate.getMonth() + 1;
+  const selectedYear = selectedDate.getFullYear();
 
   const getMonthName = (monthNumber) => {
     const date = new Date(selectedYear, monthNumber - 1, 1);
@@ -33,36 +38,47 @@ function MonthlyPurchases() {
   };
 
   useEffect(() => {
+    let active = true;
+
     const fetchMonthlyPurchases = async () => {
       try {
         setLoading(true);
+        setError(null);
         const token = getToken();
 
         if (!token) {
-          console.error("Token não disponível");
-          setLoading(false);
-          return;
+          throw new Error("Token não disponível");
         }
 
-        const data = await getDebtsByMonth(token, selectedMonth);
-        setPurchases(data);
+        const data = await getDebtsByMonth(token, selectedMonth, selectedYear);
+        if (active) {
+          setPurchases(data);
+        }
       } catch (error) {
         console.error("Erro ao buscar compras do mês:", error);
-        setPurchases([]);
+        if (active) {
+          setPurchases([]);
+          setError("Não foi possível carregar os gastos deste mês.");
+        }
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     };
 
     fetchMonthlyPurchases();
-  }, [getToken, selectedMonth]);
+    return () => {
+      active = false;
+    };
+  }, [getToken, selectedMonth, selectedYear]);
 
   const handlePreviousMonth = () => {
-    setSelectedMonth((prev) => (prev === 1 ? 12 : prev - 1));
+    setSelectedDate((prev) => shiftMonth(prev, -1));
   };
 
   const handleNextMonth = () => {
-    setSelectedMonth((prev) => (prev === 12 ? 1 : prev + 1));
+    setSelectedDate((prev) => shiftMonth(prev, 1));
   };
 
   const handlePurchaseClick = (purchase) => {
@@ -156,16 +172,18 @@ function MonthlyPurchases() {
             </button>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <p className="text-sm text-gray-600">Total:</p>
-            <p className="text-2xl font-bold text-gray-900">
-              R${" "}
-              {totalAmount.toLocaleString("pt-BR", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </p>
-          </div>
+          {!error && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <p className="text-sm text-gray-600">Total:</p>
+              <p className="text-2xl font-bold text-gray-900">
+                R${" "}
+                {totalAmount.toLocaleString("pt-BR", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+            </div>
+          )}
         </div>
 
         {purchases.length > 0 && (
@@ -208,7 +226,14 @@ function MonthlyPurchases() {
           </div>
         )}
 
-        {purchases.length === 0 ? (
+        {error ? (
+          <div
+            role="alert"
+            className="bg-white rounded-lg shadow-md p-8 text-center"
+          >
+            <p className="text-red-600">{error}</p>
+          </div>
+        ) : purchases.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <p className="text-gray-500">
               Nenhuma compra registrada neste mês.
